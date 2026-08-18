@@ -76,6 +76,8 @@ $(document).ready(function (e) {
   });
   var from = $.cookie("user");
   var to = "all";
+  $("#from").html(from);
+  $("#to").html("所有人");
   window.reconnectd = false;
   $("#input_content").html("");
   if (/Firefox\/\s/.test(navigator.userAgent)) {
@@ -143,6 +145,13 @@ $(document).ready(function (e) {
     console.log("服务器下发了清空指令，已清空本地面板");
   });
 
+  // 文件上传结果通知：仅弹出系统通知，不写入聊天记录
+  socket.on("upload_ack", function (data) {
+    var payload = typeof data === "string" ? JSON.parse(data) : data;
+    var msg = payload.msg || "文件操作完成";
+    showNotice(msg);
+  });
+
   socket.on("image", (data) => {
     console.log(data);
     var data = JSON.parse(data);
@@ -161,35 +170,49 @@ $(document).ready(function (e) {
   });
 
   socket.on("say", function (msgData) {
-    var time = msgData.time;
-    time = getTimeShow(time);
+    if (typeof msgData === "string") {
+      try {
+        msgData = JSON.parse(msgData);
+      } catch (e) {
+        console.error("解析 say 消息异常:", e);
+      }
+    }
+    if (!msgData || !msgData.data) {
+      console.warn("收到空或不合法的 say 消息:", msgData);
+      return;
+    }
+
+    var time = getTimeShow(msgData.time || new Date());
     var data = msgData.data;
-    console.log(msgData);
-    if (data.to == "all") {
+    var sender = data.from || "匿名用户";
+    var target = data.to || "all";
+    var content = data.msg || "";
+
+    if (target == "all") {
       addMsg(
-        "<div>" + data.from + "(" + time + ")说：<br/>" + data.msg + "</div>"
+        "<div>" + sender + "(" + time + ")说：<br/>" + content + "</div>"
       );
       //防止重连后疯狂通知
-      if (data.from != from && !window.reconnectd && msgData.notice) {
-        showNotice(data.from + "：" + data.msg);
+      if (sender != from && !window.reconnectd && msgData.notice) {
+        showNotice(sender + "：" + content);
         play_ring("/ring/msg.wav");
       }
-    } else if (data.from == from) {
+    } else if (sender == from) {
       addMsg(
-        "<div>我(" + time + ")对" + data.to + "说：<br/>" + data.msg + "</div>"
+        "<div>我(" + time + ")对" + target + "说：<br/>" + content + "</div>"
       );
-    } else if (data.to == from) {
+    } else if (target == from) {
       addMsg(
         "<div>" +
-        data.from +
+        sender +
         "(" +
         time +
         ")对我说：<br/>" +
-        data.msg +
+        content +
         "</div>"
       );
       if (!window.reconnectd && msgData.notice) {
-        showNotice(data.from + "说：" + data.msg);
+        showNotice(sender + "说：" + content);
         play_ring("/ring/msg.wav");
       }
     }
@@ -199,40 +222,56 @@ $(document).ready(function (e) {
     });
   });
 
+  // 网页内悬浮 Toast 提示（不受浏览器通知权限限制）
+  function showToast(msg) {
+    var $toast = $("#app_toast");
+    if ($toast.length === 0) {
+      $toast = $(
+        '<div id="app_toast" style="position: fixed; top: 25px; left: 50%; transform: translateX(-50%); background: #1a1a1a; color: #fff; padding: 10px 24px; border-radius: 20px; font-size: 14px; font-weight: 500; z-index: 99999; box-shadow: 0 4px 16px rgba(0,0,0,0.25); display: none; transition: all 0.3s ease; pointer-events: none; border: 1px solid rgba(255,255,255,0.15);"></div>'
+      );
+      $("body").append($toast);
+    }
+    $toast.text(msg).stop(true, true).fadeIn(200).delay(2800).fadeOut(400);
+  }
+
   function showNotice(msg) {
-    //发送通知
-    newNotify = function () {
-      var notification = new Notification("系统通知:", {
-        dir: "auto",
-        lang: "hi",
-        requireInteraction: false,
-        //tag: "testTag",
-        icon: "",
-        body: msg,
-      });
-      notification.onclick = function (event) {
-        //回到发送此通知的页面
-        window.focus();
-        //回来后要做什么
-        console.log("I'm back");
+    // 1. 始终触发页面内的浮窗提示
+    showToast(msg);
+    play_ring("/ring/online.wav");
+
+    // 2. 尝试触发浏览器系统桌面通知
+    if (typeof Notification !== "undefined") {
+      var newNotify = function () {
+        var notification = new Notification("系统通知", {
+          dir: "auto",
+          requireInteraction: false,
+          body: msg,
+        });
+        notification.onclick = function () {
+          window.focus();
+        };
       };
-    };
-    //权限判断
-    if (Notification.permission == "granted") {
-      newNotify();
-    } else {
-      //请求权限
-      Notification.requestPermission(function (perm) {
-        if (perm == "granted") {
-          newNotify();
-        }
-      });
+      if (Notification.permission === "granted") {
+        newNotify();
+      } else if (Notification.permission !== "denied") {
+        Notification.requestPermission(function (perm) {
+          if (perm === "granted") {
+            newNotify();
+          }
+        });
+      }
     }
   }
 
   function addMsg(msg) {
-    $("#contents").append(msg);
-    $("#contents").append("<br/>");
+    var $msg = $("<div>" + msg + "</div>");
+    $msg.find("img").click(function () {
+      if (typeof popupImg === "function") {
+        popupImg(this.src);
+      }
+      return false;
+    });
+    $("#contents").append($msg);
     $("#contents").scrollTop($("#contents")[0].scrollHeight);
   }
   function flushUsers(users) {
@@ -281,47 +320,44 @@ $(document).ready(function (e) {
 
     if (file) {
       const reader = new FileReader();
-      if (file.type == "image/png") {
-        console.log("发送图片", file);
-        reader.onload = (event) => {
-          socket.emit(
-            "image",
-            JSON.stringify({
-              to: to,
-              from: from,
-              msg: event.target.result.split(",")[1],
-            })
-          );
-        };
-        reader.readAsDataURL(file);
-      } else {
-        reader.onload = (event) => {
-          console.log("发送文件", file);
-          const arrayBuffer = event.target.result;
-          socket.emit('fileUpload', { fileName: file.name, fileBuffer: arrayBuffer });
-          socket.emit(
-            "say",
-            JSON.stringify({
-              to: to,
-              from: from,
-              msg: "发送文件:<a target='_blank' href='/doc/" + file.name + "'>" + file.name + "</a>",
-            })
-          );
-        };
-        reader.readAsArrayBuffer(file);
-      }
+      reader.onload = (event) => {
+        console.log("[文件上传] 文件名:", file.name, " 大小:", file.size);
+        const dataUrl = event.target.result;
+        // 将文件数据以 Base64 格式通过 WebSocket 传给服务端保存
+        socket.emit('fileUpload', { fileName: file.name, fileBuffer: dataUrl });
+        socket.emit(
+          "say",
+          JSON.stringify({
+            to: to || "all",
+            from: from || "匿名用户",
+            msg: "发送文件:<a target='_blank' href='/doc/" + encodeURIComponent(file.name) + "'>" + file.name + "</a>",
+          })
+        );
+      };
+      reader.readAsDataURL(file);
+      // 重置 input value 以便支持重复上传同名或同一文件
+      $(this).val("");
     }
   });
   function say() {
-    if ($("#input_content").html() == "") {
+    var $input = $("#input_content");
+    var html = $input.html();
+    var hasImg = $input.find("img").length > 0 || /<img\s+/i.test(html);
+    var text = $input.text().trim();
+    
+    // 如果既没有文字，也没有包含图片标签，则不发送
+    if (!html || (!hasImg && text === "")) {
       return;
     }
-    socket.emit(
-      "say",
-      JSON.stringify({ to: to, from: from, msg: $("#input_content").html() })
-    );
-    $("#input_content").html("");
-    $("#input_content").focus();
+    if (!from) {
+      from = $.cookie("user") || "匿名用户";
+    }
+    var target = to || "all";
+    var payload = JSON.stringify({ to: target, from: from, msg: html });
+    console.log("[say] 发送 payload (包含图片或文字):", { target: target, from: from, hasImg: hasImg });
+    socket.emit("say", payload);
+    $input.html("");
+    $input.focus();
   }
   function sendimg() {
     socket.emit(

@@ -82,6 +82,23 @@ body {
   background: #eef2f7;
 }
 
+/* 聊天面板及输入框内图片自适应与点击预览 */
+#contents img, #input_content img {
+  max-width: 320px;
+  max-height: 240px;
+  border-radius: 8px;
+  margin: 6px 0;
+  cursor: pointer;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  transition: transform 0.2s, box-shadow 0.2s;
+  display: block;
+}
+
+#contents img:hover {
+  transform: scale(1.02);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
 /* 文字色彩重置 */
 #from,
 #contents strong {

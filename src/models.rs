@@ -11,9 +11,20 @@ pub struct WsEnvelope {
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct SayPayload {
+    #[serde(default = "default_sender")]
     pub from: String,
+    #[serde(default = "default_target")]
     pub to: String,
+    #[serde(default)]
     pub msg: String,
+}
+
+fn default_sender() -> String {
+    "匿名用户".to_string()
+}
+
+fn default_target() -> String {
+    "all".to_string()
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -54,5 +65,5 @@ pub struct FileUploadPayload {
     #[serde(rename = "fileName")]
     pub file_name: String,
     #[serde(rename = "fileBuffer")]
-    pub file_buffer: Vec<u8>,
+    pub file_buffer: String,
 }

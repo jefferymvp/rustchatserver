@@ -13,7 +13,7 @@ pub mod storage;
 pub mod ws;
 
 use crate::args::ARGS;
-use crate::routes::{auth, notice};
+use crate::routes::{auth, doc, notice};
 use crate::server::ChatServer;
 use crate::storage::Storage;
 use crate::ws::ws_handler;
@@ -66,6 +66,7 @@ async fn main() -> std::io::Result<()> {
             .service(auth::signin_page)
             .service(auth::signin_post)
             .service(auth::signup_page)
+            .service(doc::serve_doc)
             .service(notice::notice_handler)
             .route("/ws", web::get().to(ws_handler))
             .service(Files::new("/", "./public").prefer_utf8(true))
