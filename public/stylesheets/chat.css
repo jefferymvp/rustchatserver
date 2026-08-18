@@ -1,0 +1,370 @@
+:root {
+  --bg-main: #f5f7fa;
+  --bg-card: #ffffff;
+  --primary-blue: #007aff;
+  --primary-hover: #0063d1;
+  --header-bg: #ffffff;
+  --text-main: #1a1a1a;
+  --text-muted: #666666;
+  --border-color: #e1e4e8;
+  --msg-bg: #f0f2f5;
+  --shadow-soft: 0 2px 10px rgba(0, 0, 0, 0.05);
+}
+
+* {
+  box-sizing: border-box;
+  font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Helvetica Neue", Helvetica, Arial, sans-serif;
+}
+
+body {
+  background: var(--bg-main) !important;
+  color: var(--text-main);
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+}
+
+#contain {
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  background: var(--bg-main);
+}
+
+/* 布局调整 */
+#content {
+  position: absolute;
+  top: 0;
+  right: 240px;
+  bottom: 0;
+  left: 0;
+  transition: right 0.3s;
+}
+
+#content_show {
+  position: absolute;
+  top: 15px;
+  left: 15px;
+  bottom: 175px;
+  /* 压缩间距 */
+  right: 15px;
+}
+
+#contents {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  padding: 20px;
+  overflow-y: auto;
+  box-shadow: var(--shadow-soft);
+}
+
+/* 消息卡片化 */
+#contents>div {
+  margin-bottom: 12px;
+  padding: 12px 16px;
+  background: var(--msg-bg);
+  border-radius: 8px;
+  line-height: 1.5;
+  font-size: 14px;
+  border-left: 4px solid var(--border-color);
+}
+
+#contents>div:hover {
+  border-left-color: var(--primary-blue);
+  background: #eef2f7;
+}
+
+/* 文字色彩重置 */
+#from,
+#contents strong {
+  color: var(--primary-blue) !important;
+  font-weight: 600;
+}
+
+#contents span[style*="color:#f00"],
+#contents span[style*="color:red"] {
+  color: #d93025 !important;
+  /* 更明亮的红色 */
+}
+
+/* 输入区域 */
+#content_saying {
+  position: absolute;
+  left: 15px;
+  bottom: 15px;
+  height: 150px;
+  right: 15px;
+}
+
+#toolbar {
+  height: 44px;
+  background: #fff;
+  border: 1px solid var(--border-color);
+  border-bottom: none;
+  border-top-left-radius: 12px;
+  border-top-right-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  /* 提示在左，功能在右 */
+  padding: 0 15px;
+}
+
+#toolbar_actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+#clear_btn {
+  background: #ffffff;
+  color: #ea4335;
+  border: 1px solid #ea4335;
+  padding: 4px 12px;
+  border-radius: 6px;
+  font-size: 12px;
+  cursor: pointer;
+  transition: all 0.2s;
+  outline: none;
+  /* 移除焦点边框 */
+}
+
+#clear_btn:hover {
+  background: #fef1f0;
+  /* 轻微浅红色悬停提示 */
+}
+
+#clear_btn:active {
+  background: #ea4335;
+  /* 只有按下时变红 */
+  color: #fff;
+}
+
+#input_content {
+  position: absolute;
+  top: 44px;
+  left: 0;
+  right: 120px;
+  bottom: 0;
+  background: #fff;
+  border: 1px solid var(--border-color);
+  border-bottom-left-radius: 12px;
+  outline: none;
+  padding: 15px;
+  overflow: auto;
+  font-size: 15px;
+}
+
+#say {
+  position: absolute;
+  top: 44px;
+  right: 0;
+  bottom: 0;
+  width: 110px;
+  background: var(--primary-blue);
+  color: #fff;
+  border-bottom-right-radius: 12px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-size: 18px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+#say:hover {
+  background: var(--primary-hover);
+}
+
+#sayingto {
+  font-size: 13px;
+  color: var(--text-muted);
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+}
+
+#sayingto #from {
+  margin: 0 4px;
+}
+
+#sayingto #to {
+  margin: 0 4px;
+}
+
+/* 在线列表 */
+#users_online {
+  position: absolute;
+  top: 15px;
+  right: 15px;
+  bottom: 15px;
+  width: 210px;
+}
+
+#usersbar {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  box-shadow: var(--shadow-soft);
+}
+
+#user_label {
+  height: 44px;
+  line-height: 44px;
+  text-align: center;
+  background: #f8f9fa;
+  border-bottom: 1px solid var(--border-color);
+  font-weight: bold;
+  color: var(--text-main);
+  border-top-left-radius: 12px;
+  border-top-right-radius: 12px;
+}
+
+#users_list ul {
+  list-style: none;
+  padding: 10px;
+}
+
+#users_list ul li {
+  padding: 10px 15px;
+  margin-bottom: 4px;
+  border-radius: 8px;
+  cursor: pointer;
+  color: var(--text-muted);
+  transition: 0.2s;
+}
+
+#users_list ul li:hover,
+.sayingto {
+  background: #e8f0fe !important;
+  color: var(--primary-blue) !important;
+}
+
+/* ---------------- 移动端 H5 适配 ---------------- */
+@media screen and (max-width: 768px) {
+  #header {
+    display: flex !important;
+    justify-content: space-between;
+    align-items: center;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 56px;
+    background: #fff;
+    border-bottom: 2px solid var(--primary-blue);
+    padding: 0 15px;
+    z-index: 1000;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  }
+
+  #header_title {
+    font-weight: bold;
+    color: #1a1a1a;
+    font-size: 18px;
+  }
+
+  #user_toggle_btn {
+    background: var(--primary-blue);
+    color: #fff;
+    padding: 6px 14px;
+    border-radius: 20px;
+    font-size: 13px;
+    font-weight: 500;
+  }
+
+  #content {
+    right: 0 !important;
+    top: 56px !important;
+  }
+
+  #content_show {
+    top: 10px !important;
+    bottom: 160px !important;
+    /* 同步压缩移动端间距 */
+    left: 10px !important;
+    right: 10px !important;
+  }
+
+  #content_saying {
+    height: 140px !important;
+    bottom: 10px !important;
+  }
+
+  #toolbar {
+    height: auto;
+    min-height: 40px;
+    padding: 8px 10px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  #toolbar_actions {
+    margin-left: auto;
+  }
+
+  #image-input {
+    display: none !important;
+  }
+
+  #sayingto {
+    font-size: 12px;
+  }
+
+  #clear_btn:hover {
+    background: #ffffff !important;
+    /* 移动端完全禁用悬停红底，防止粘连 */
+    color: #ea4335 !important;
+  }
+
+  #clear_btn:active {
+    background: #ea4335 !important;
+    /* 仅在触摸瞬间红底 */
+    color: #ffffff !important;
+  }
+
+  #users_online {
+    display: none;
+    position: fixed;
+    top: 56px;
+    right: 0;
+    bottom: 0;
+    width: 70%;
+    max-width: 280px;
+    z-index: 1100;
+    background: #fff;
+    box-shadow: -5px 0 15px rgba(0, 0, 0, 0.1);
+  }
+
+  #usersbar {
+    border-radius: 0;
+    border: none;
+    border-left: 1px solid var(--border-color);
+  }
+
+  #input_content {
+    right: 90px !important;
+  }
+
+  #say {
+    width: 80px !important;
+    font-size: 16px !important;
+  }
+}

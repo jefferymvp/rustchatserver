@@ -1,0 +1,14 @@
+services:
+  chatroom:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: chatroom-server
+    restart: always
+    ports:
+      - "${PORT:-28080}:28080"
+    volumes:
+      - ./uploads:/app/public/doc
+    environment:
+      PORT: 28080
+      BIND: "0.0.0.0"

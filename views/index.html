@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+  <title>Chating</title>
+  <script type="text/javascript" src="javascripts/jquery.min.js"></script>
+  <script type="text/javascript" src="javascripts/jquery.cookie.js"></script>
+  <script type="text/javascript" src="javascripts/json2.js"></script>
+  <script src="javascripts/ws_adapter.js"></script>
+  <link type="text/css" rel="stylesheet" href="stylesheets/common.css" />
+  <link type="text/css" rel="stylesheet" href="stylesheets/chat.css" />
+  <style>
+    .overlay {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0, 0, 0, 0.7);
+      z-index: 1000;
+    }
+
+    .dialog {
+      width: 90%;
+      max-width: 1000px;
+      height: auto;
+      max-height: 80%;
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      background: white;
+      padding: 10px;
+      z-index: 1001;
+      overflow: auto;
+    }
+
+    .close-button {
+      float: right;
+      cursor: pointer;
+    }
+
+    .chat-box {
+      border: 1px solid #ccc;
+      padding: 10px;
+      width: 300px;
+      height: 100px;
+      overflow-y: auto;
+    }
+
+    .user-list {
+      display: none;
+      border: 1px solid #ccc;
+      background: #fff;
+      position: absolute;
+      z-index: 1000;
+    }
+
+    .user-list li {
+      padding: 5px;
+      cursor: pointer;
+    }
+
+    .user-list li:hover {
+      background: #eee;
+    }
+  </style>
+</head>
+
+<body>
+  <div id="header" style="display:none;">
+    <span id="header_title">小小聊天室</span>
+    <div id="user_toggle_btn">👥 在线用户</div>
+  </div>
+  <div id="contain">
+    <div id="content">
+      <div id="content_show">
+        <div id="contents"></div>
+      </div>
+      <div id="content_saying">
+        <div id="toolbar">
+          <div id="sayingto">
+            你好 <span id="from"></span> ，你正在对 <span id="to"></span> 说
+          </div>
+          <div id="toolbar_actions">
+            <input style="margin-top: 2px; width: 200px" type="file" id="image-input" accept="*.*" />
+            <button id="clear_btn" style="margin-left: 10px; cursor: pointer;">清空消息</button>
+          </div>
+        </div>
+        <div id="input_content" contenteditable="true"></div>
+        <div id="say">发送</div>
+      </div>
+      <div>
+        <ul id="userList" class="user-list"></ul>
+      </div>
+      <div id="content_image"></div>
+    </div>
+    <div id="users_online">
+      <div id="usersbar">
+        <div id="user_label">在线用户</div>
+        <div id="users_list">
+          <ul id="list"></ul>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div id="ring" style="width: 0px; height: 0px"></div>
+  <div class="overlay" id="overlay">
+    <div class="dialog">
+      <span class="close-button" id="close-button">&times;</span>
+      <img id="zoomimage" style="width: auto; height: auto; max-width: 100%; max-height: 100%" /><img />
+    </div>
+  </div>
+</body>
+<script type="text/javascript" src="javascripts/chat.js"></script>
+<script>
+
+
+
+  function popupImg(imgSrc) {
+    $("#zoomimage").attr("src", imgSrc);
+    document.getElementById("overlay").style.display = "block";
+  }
+
+  document.getElementById("close-button").onclick = function () {
+    document.getElementById("overlay").style.display = "none";
+  };
+
+  document.addEventListener("DOMContentLoaded", function () {
+    const dropArea = document.getElementById("input_content");
+
+    dropArea.addEventListener("paste", function (e) {
+      handlePaste(e);
+    });
+
+    function handlePaste(e) {
+      //e.preventDefault();
+      if (e.clipboardData && e.clipboardData.items) {
+        for (let item of e.clipboardData.items) {
+          if (item.type.indexOf("image") === 0) {
+            const file = item.getAsFile();
+            const reader = new FileReader();
+            reader.onload = function (event) {
+              const base64Image = event.target.result;
+              displayImage(base64Image);
+            };
+            reader.readAsDataURL(file);
+            break;
+          }
+        }
+      }
+    }
+
+    function displayImage(base64Image) {
+      dropArea.innerHTML = `<img src="${base64Image}" alt="Pasted Image">`;
+    }
+  });
+</script>
+
+</html>

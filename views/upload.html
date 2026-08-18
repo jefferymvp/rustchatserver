@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>文件上传</title>
+</head>
+<body>
+  <form id="uploadForm" enctype="multipart/form-data">
+    <input type="file" id="fileInput" name="file">
+    <button type="submit">上传</button>
+  </form>
+  <div id="message"></div>
+
+  <script src="/socket.io/socket.io.js"></script>
+  <script>
+    const socket = io();
+
+    document.getElementById('uploadForm').addEventListener('submit', (event) => {
+      event.preventDefault();
+      const fileInput = document.getElementById('fileInput');
+      const file = fileInput.files[0];
+      const reader = new FileReader();
+
+      reader.onload = function(e) {
+        const arrayBuffer = e.target.result;
+        socket.emit('fileUpload', { fileName: file.name, fileBuffer: arrayBuffer });
+      };
+
+      reader.readAsArrayBuffer(file);
+    });
+
+    socket.on('uploadSuccess', (message) => {
+      document.getElementById('message').innerText = message;
+    });
+
+    socket.on('uploadError', (message) => {
+      document.getElementById('message').innerText = message;
+    });
+  </script>
+</body>
+</html>

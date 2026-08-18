@@ -1,0 +1,8 @@
+/target
+**/*.rs.bk
+Cargo.lock.backup
+public/doc/*
+!public/doc/.gitkeep
+.env
+.DS_Store
+Thumbs.db
