@@ -24,5 +24,8 @@ pub struct Args {
 
     #[arg(long, env = "MAX_UPLOAD_SIZE_MB", default_value_t = 100)]
     pub max_upload_size_mb: usize,
+
+    #[arg(long, env = "DATA_DIR", default_value = "data")]
+    pub data_dir: String,
 }
 

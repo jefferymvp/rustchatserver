@@ -6,7 +6,7 @@ authors = ["stepcloud-chatroom"]
 description = "High-performance WebSocket chatroom server rewritten in Rust"
 
 [dependencies]
-actix-web = "4"
+actix-web = { version = "4", default-features = false, features = ["macros", "cookies"] }
 actix-files = "0.6"
 actix-ws = "0.4"
 

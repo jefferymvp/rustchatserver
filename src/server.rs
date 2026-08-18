@@ -1,4 +1,5 @@
 use crate::models::{NoticeMsg, SayMsg, SystemMsg, UserFlushMsg, WsEnvelope};
+use crate::storage::Storage;
 use chrono::Local;
 use std::collections::HashMap;
 use std::sync::Arc;
@@ -23,12 +24,27 @@ pub struct ChatServerState {
 #[derive(Clone)]
 pub struct ChatServer {
     pub state: Arc<Mutex<ChatServerState>>,
+    pub storage: Storage,
 }
 
 impl ChatServer {
-    pub fn new() -> Self {
+    pub fn new(storage: Storage) -> Self {
+        let recent_msgs = storage.load_recent_say_msgs(50);
+        let (status_report, found_records) = storage.load_botty_history();
+
+        let initial_state = ChatServerState {
+            clients: HashMap::new(),
+            users: Vec::new(),
+            msg_history: recent_msgs,
+            botty_history: BottyHistory {
+                status_report,
+                found_records,
+            },
+        };
+
         ChatServer {
-            state: Arc::new(Mutex::new(ChatServerState::default())),
+            state: Arc::new(Mutex::new(initial_state)),
+            storage,
         }
     }
 
@@ -157,8 +173,9 @@ impl ChatServer {
                 let _ = client_tx.send(msg_json.clone());
             }
             say_msg.notice = false;
+            self.storage.save_say_msg(&say_msg);
             state.msg_history.push(say_msg);
-            if state.msg_history.len() > 30 {
+            if state.msg_history.len() > 50 {
                 state.msg_history.remove(0);
             }
         } else {
@@ -193,8 +210,10 @@ impl ChatServer {
         };
 
         if msg_text.starts_with("Botty: Status Report") {
+            self.storage.save_botty_status(&notice_obj);
             state.botty_history.status_report = Some(notice_obj.clone());
         } else if msg_text.starts_with("Botty: Found") || msg_text.contains("Got stuck") {
+            self.storage.save_botty_found(&notice_obj);
             state.botty_history.found_records.push(notice_obj.clone());
             if state.botty_history.found_records.len() > 100 {
                 state.botty_history.found_records.remove(0);
@@ -212,6 +231,7 @@ impl ChatServer {
     }
 
     pub async fn clear_history(&self) {
+        self.storage.clear_all_history();
         let mut state = self.state.lock().await;
         state.msg_history.clear();
         state.botty_history.status_report = None;

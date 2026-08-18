@@ -16,7 +16,7 @@ FROM bitnami/minideb:latest
 
 WORKDIR /app
 
-RUN mkdir -p /usr/share/zoneinfo public/doc
+RUN mkdir -p /usr/share/zoneinfo public/doc data
 
 # 复制时区与证书
 COPY --from=build \
