@@ -50,7 +50,6 @@ jobs:
     name: Publish GitHub Release
     needs: build-packages
     runs-on: ubuntu-latest
-    if: startsWith(github.ref, 'refs/tags/v') || github.event_name == 'workflow_dispatch'
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -61,9 +60,11 @@ jobs:
           path: release-dist
           merge-multiple: true
 
-      - name: Create Release and Upload Assets
+      - name: Create or Update Release
         uses: softprops/action-gh-release@v2
         with:
+          tag_name: ${{ startsWith(github.ref, 'refs/tags/v') && github.ref_name || 'v0.1.0' }}
+          name: ${{ startsWith(github.ref, 'refs/tags/v') && github.ref_name || 'Release v0.1.0' }}
           files: release-dist/*.tar.gz
           generate_release_notes: true
         env:
