@@ -62,6 +62,44 @@ docker compose up -d --build
 ```
 服务将在 `http://0.0.0.0:28080` 启动，上传的文件自动持久化在宿主机 `./uploads` 目录（容器内映射 `/app/public/doc`）。
 
+### 3. 跨平台服务程序与一键打包部署 (x86 / ARM Cortex / OpenWrt)
+
+无需 Docker 环境，可直接将聊天室发布为**原生自适应后台服务程序**，支持常规 Linux (systemd) 与 OpenWrt 路由器 (procd)。
+
+#### (1) 在开发机一键交叉编译与打包
+利用 `cross` 工具链将程序及前端资源一键打包为 `.tar.gz`：
+
+- **Windows (PowerShell)**:
+  ```powershell
+  # 打包 OpenWrt / Cortex-A 64位 (树莓派/RK3568/MT7981)
+  .\scripts\build_package.ps1 -Target aarch64-unknown-linux-musl
+
+  # 打包 x86_64 软路由 / Linux 服务器
+  .\scripts\build_package.ps1 -Target x86_64-unknown-linux-musl
+  ```
+
+- **Linux / CI**:
+  ```bash
+  ./scripts/build_package.sh aarch64-unknown-linux-musl
+  ```
+打包产物将输出至 `dist/chatroom-v0.1.0-<target>.tar.gz`。
+
+#### (2) 目标设备一键部署 (自适应环境)
+将生成的 `.tar.gz` 传输至目标设备（通过 scp/U盘），运行内置管理脚本：
+```bash
+# 解压
+tar -zxvf chatroom-v0.1.0-aarch64-unknown-linux-musl.tar.gz
+cd chatroom-v0.1.0-aarch64-unknown-linux-musl
+
+# 一键安装服务并设置开机自启
+sudo ./install.sh
+
+# 管理服务状态
+sudo ./install.sh status   # 查看运行状态
+sudo ./install.sh restart  # 重启服务
+sudo ./install.sh uninstall# 彻底卸载服务
+```
+
 ---
 
 ## 📝 开发复盘与避坑总结 (Lessons Learned)

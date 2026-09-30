@@ -21,3 +21,10 @@ log = "0.4"
 env_logger = "0.10"
 chrono = "0.4"
 base64 = "0.22"
+
+[profile.release]
+opt-level = "z"
+lto = true
+codegen-units = 1
+panic = "abort"
+strip = true

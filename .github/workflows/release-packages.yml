@@ -1,0 +1,70 @@
+name: Build and Release Binary Packages
+
+on:
+  push:
+    branches: [ "main" ]
+    tags:
+      - "v*"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build-packages:
+    name: Build (${{ matrix.target }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - target: x86_64-unknown-linux-musl
+            desc: x86_64 软路由与普通 Linux (musl 静态)
+          - target: aarch64-unknown-linux-musl
+            desc: ARM Cortex-A 64位 (树莓派/RK3568/MT7981 OpenWrt)
+          - target: armv7-unknown-linux-musleabihf
+            desc: ARM Cortex-A 32位 (早期 ARMv7 设备)
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Install cross toolchain
+        uses: taiki-e/install-action@cross
+
+      - name: Build & Package (${{ matrix.target }})
+        run: |
+          chmod +x scripts/build_package.sh scripts/install.sh
+          ./scripts/build_package.sh ${{ matrix.target }}
+
+      - name: Upload Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: package-${{ matrix.target }}
+          path: dist/*.tar.gz
+
+  create-release:
+    name: Publish GitHub Release
+    needs: build-packages
+    runs-on: ubuntu-latest
+    if: startsWith(github.ref, 'refs/tags/v') || github.event_name == 'workflow_dispatch'
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Download all built packages
+        uses: actions/download-artifact@v4
+        with:
+          path: release-dist
+          merge-multiple: true
+
+      - name: Create Release and Upload Assets
+        uses: softprops/action-gh-release@v2
+        with:
+          files: release-dist/*.tar.gz
+          generate_release_notes: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

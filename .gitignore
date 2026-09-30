@@ -7,3 +7,4 @@ public/doc/*
 .DS_Store
 Thumbs.db
 /data
+/dist
