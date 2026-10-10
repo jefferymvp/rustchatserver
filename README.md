@@ -56,10 +56,22 @@ cargo run
 ```
 浏览器访问：`http://127.0.0.1:28080`
 
-### 2. Docker 容器化运行
-```bash
-docker compose up -d --build
-```
+### 2. Docker 容器化运行 (支持 amd64 / arm64)
+- **直接使用预构建的多架构镜像 (推荐，适配 x86 / 树莓派 / ARM 软路由)**：
+  ```bash
+  docker run -d \
+    --name chatroom-server \
+    --restart always \
+    -p 28080:28080 \
+    -v ./data:/app/data \
+    -v ./uploads:/app/public/doc \
+    ghcr.io/jefferymvp/rustchatserver:latest
+  ```
+
+- **或使用 Docker Compose 本地构建/启动**：
+  ```bash
+  docker compose up -d --build
+  ```
 服务将在 `http://0.0.0.0:28080` 启动，上传的文件自动持久化在宿主机 `./uploads` 目录（容器内映射 `/app/public/doc`）。
 
 ### 3. 跨平台服务程序与一键打包部署 (x86 / ARM Cortex / OpenWrt)

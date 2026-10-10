@@ -11,8 +11,8 @@ COPY . .
 
 RUN cargo build --release
 
-# ----- 第二阶段：采用轻量级运行镜像组装 -----
-FROM bitnami/minideb:latest
+# ----- 第二阶段：采用轻量级运行镜像组装 (原生多架构支持: amd64 / arm64) -----
+FROM debian:bookworm-slim
 
 WORKDIR /app
 
